@@ -1,0 +1,5 @@
+name: HyperCore
+version: '1'
+main: HyperCore.HyperCore
+api-version: '1.21'
+description: HyperCore!~
