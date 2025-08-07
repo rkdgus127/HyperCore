@@ -1,17 +1,12 @@
 package HyperCore;
 
+import HyperCore.Listener.HyperLoader;
 import org.bukkit.plugin.java.JavaPlugin;
 
-public final class HyperCore extends JavaPlugin {
+public class HyperCore extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        // Plugin startup logic
-
-    }
-
-    @Override
-    public void onDisable() {
-        // Plugin shutdown logic
+        HyperLoader.loadAll(this);
     }
 }
