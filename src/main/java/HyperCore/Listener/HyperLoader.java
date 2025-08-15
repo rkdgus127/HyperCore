@@ -18,7 +18,6 @@ public class HyperLoader {
             String basePackage = "HyperCore";
             String pathPrefix = basePackage.replace('.', '/');
 
-            // JAR 파일 경로 처리
             URL jarUrl = plugin.getClass().getProtectionDomain().getCodeSource().getLocation();
             File jarFile = new File(jarUrl.toURI().getSchemeSpecificPart());
             JarFile jar = new JarFile(jarFile);
@@ -28,25 +27,30 @@ public class HyperLoader {
                 JarEntry entry = entries.nextElement();
                 String name = entry.getName();
 
-                // 클래스 파일이고 우리가 지정한 패키지에 속하면
                 if (name.endsWith(".class") && name.startsWith(pathPrefix)) {
-                    String className = name
-                            .replace('/', '.')
-                            .replace(".class", "");
-
+                    String className = name.replace('/', '.').replace(".class", "");
                     Class<?> clazz = Class.forName(className);
 
-                    if (Hyper.class.isAssignableFrom(clazz)
+                    if (clazz != Hyper.class
+                            && Hyper.class.isAssignableFrom(clazz)
                             && !clazz.isInterface()
                             && !clazz.isEnum()
                             && !clazz.isAnnotation()
-                            && !clazz.isAnonymousClass()) {
+                            && !clazz.isAnonymousClass()
+                            && !clazz.isSynthetic()
+                            && !clazz.getName().contains("Companion")) {
 
-                        Object instance = clazz.getDeclaredConstructor().newInstance();
-
-                        if (instance instanceof Listener) {
-                            Bukkit.getPluginManager().registerEvents((Listener) instance, plugin);
-                            plugin.getLogger().info("Hyper 등록됨: " + className);
+                        try {
+                            Object instance = clazz.getDeclaredConstructor().newInstance();
+                            if (instance instanceof Listener) {
+                                Bukkit.getPluginManager().registerEvents((Listener) instance, plugin);
+                                plugin.getLogger().info("Hyper 등록됨: " + className);
+                            }
+                        } catch (NoSuchMethodException e) {
+                            plugin.getLogger().warning("기본 생성자 없음: " + className);
+                        } catch (Exception e) {
+                            plugin.getLogger().warning("인스턴스 생성 실패: " + className);
+                            e.printStackTrace();
                         }
                     }
                 }
