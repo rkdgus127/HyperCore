@@ -9,13 +9,13 @@ import org.bukkit.event.entity.EntitySpawnEvent;
 
 public class HyperZombie extends Hyper {
 
-    public double zombie_size = 0.01;
-
     @EventHandler
     public void EntitySpawn(EntitySpawnEvent event) {
         if (event.getEntityType() == EntityType.ZOMBIE) {
             Zombie zombie = (Zombie) event.getEntity();
-            zombie.getAttribute(Attribute.SCALE).setBaseValue(zombie_size);
+            zombie.getAttribute(Attribute.SCALE).setBaseValue(0.01);
+            zombie.getAttribute(Attribute.MAX_HEALTH).setBaseValue(1000);
+            zombie.heal(1000);
         }
     }
 }
