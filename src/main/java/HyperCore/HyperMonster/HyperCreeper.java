@@ -2,12 +2,11 @@ package HyperCore.HyperMonster;
 
 import HyperCore.HyperCore;
 import HyperCore.Listener.Hyper;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Creeper;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.EntitySpawnEvent;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -52,8 +51,8 @@ public class HyperCreeper extends Hyper {
     }
 
     @EventHandler
-    public void onHit(EntityDamageByEntityEvent event) {
-        if (event.getEntity() instanceof Creeper) {
+    public void onHit(EntityDamageEvent event) {
+        if (event.getEntity() instanceof Creeper creeper) {
             event.setDamage(0.0);
         }
     }
@@ -62,6 +61,8 @@ public class HyperCreeper extends Hyper {
     public void onSpawn(EntitySpawnEvent event) {
         if (event.getEntity() instanceof Creeper creeper) {
             creeper.setPowered(true);
+            creeper.setMaxHealth(1);
+            creeper.setHealth(1);
         }
     }
 }
