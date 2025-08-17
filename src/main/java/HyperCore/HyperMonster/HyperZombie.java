@@ -14,8 +14,8 @@ public class HyperZombie extends Hyper {
         if (event.getEntityType() == EntityType.ZOMBIE) {
             Zombie zombie = (Zombie) event.getEntity();
             zombie.getAttribute(Attribute.SCALE).setBaseValue(0.01);
-            zombie.getAttribute(Attribute.MAX_HEALTH).setBaseValue(1000);
-            zombie.heal(1000);
+            zombie.getAttribute(Attribute.MAX_HEALTH).setBaseValue(100);
+            zombie.heal(100);
         }
     }
 }

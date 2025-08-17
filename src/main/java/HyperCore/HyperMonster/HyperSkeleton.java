@@ -1,7 +1,7 @@
 package HyperCore.HyperMonster;
 
-import HyperCore.Listener.Hyper;
 import HyperCore.HyperCore;
+import HyperCore.Listener.Hyper;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.LivingEntity;
@@ -57,7 +57,7 @@ public class HyperSkeleton extends Hyper {
     @EventHandler
     public void onSkeletonSpawn(EntitySpawnEvent event) {
         if (!(event.getEntity() instanceof Skeleton skeleton)) return;
-        skeleton.getAttribute(Attribute.MAX_HEALTH).setBaseValue(100.0);
-        skeleton.setHealth(100.0);
+        skeleton.getAttribute(Attribute.MAX_HEALTH).setBaseValue(40.0);
+        skeleton.setHealth(40.0);
     }
 }
