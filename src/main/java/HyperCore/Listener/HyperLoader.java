@@ -1,6 +1,5 @@
 package HyperCore.Listener;
 
-import HyperCore.Listener.Hyper;
 import org.bukkit.Bukkit;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.Plugin;
