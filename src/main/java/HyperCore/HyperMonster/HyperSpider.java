@@ -81,8 +81,8 @@ public class HyperSpider extends Hyper {
     @EventHandler
     public void onEntitySpawn(EntitySpawnEvent event) {
         if (!(event.getEntity() instanceof Spider spider)) return;
-        spider.getAttribute(Attribute.MAX_HEALTH).setBaseValue(100.0);
-        spider.setHealth(100.0);
+        spider.getAttribute(Attribute.MAX_HEALTH).setBaseValue(50.0);
+        spider.setHealth(50.0);
         spider.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, Integer.MAX_VALUE, 1, true, false, false));
     }
 }
