@@ -54,9 +54,13 @@ public class HyperSpider extends Hyper {
 
         target.addPotionEffect(new PotionEffect(PotionEffectType.NAUSEA, debuff.remainingTicks, 0, true, true, true));
 
-        double newMax = Math.max(1.0, attr.getBaseValue() - damage);
-        attr.setBaseValue(newMax);
-        if (target.getHealth() > newMax) target.setHealth(newMax);
+        double newMax = attr.getBaseValue() - damage;
+        if (newMax < 0.5) newMax = 0.5; // 최대체력은 최소 0.5로 유지
+        if (attr.getBaseValue() > 0.5) attr.setBaseValue(newMax);
+
+        double targetHealth = target.getHealth() - damage;
+        if (targetHealth < 0) targetHealth = 0;
+        target.setHealth(targetHealth);
 
         new BukkitRunnable() {
             @Override
