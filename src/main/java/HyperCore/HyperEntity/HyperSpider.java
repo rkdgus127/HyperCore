@@ -1,4 +1,4 @@
-package HyperCore.HyperMonster;
+package HyperCore.HyperEntity;
 
 import HyperCore.HyperCore;
 import HyperCore.Listener.Hyper;

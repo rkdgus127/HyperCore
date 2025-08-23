@@ -1,4 +1,4 @@
-package HyperCore.HyperMonster;
+package HyperCore.HyperEntity;
 
 import HyperCore.Listener.Hyper;
 import org.bukkit.event.EventHandler;
