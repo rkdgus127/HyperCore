@@ -9,6 +9,7 @@ import org.bukkit.entity.Spider;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntitySpawnEvent;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -20,73 +21,87 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class HyperSpider extends Hyper {
 
-    private static class Debuff {
-        double totalDamage;
-        int remainingTicks;
-        Debuff(double dmg, int ticks) {
-            this.totalDamage = dmg;
-            this.remainingTicks = ticks;
-        }
-    }
-
-    private final Map<UUID, Debuff> debuffs = new ConcurrentHashMap<>();
+    private final Map<UUID, Double> originalMaxHealth = new ConcurrentHashMap<>();
+    private final Map<UUID, BukkitRunnable> restoreTasks = new ConcurrentHashMap<>();
 
     @EventHandler
     public void onSpiderAttack(EntityDamageByEntityEvent event) {
         if (!(event.getDamager() instanceof Spider)) return;
-        if (!(event.getEntity() instanceof LivingEntity target)) return;
+        if (!(event.getEntity() instanceof LivingEntity victim)) return;
         if (event.getCause() != EntityDamageEvent.DamageCause.ENTITY_ATTACK) return;
 
-        UUID id = target.getUniqueId();
-        double damage = event.getDamage();
-        AttributeInstance attr = target.getAttribute(Attribute.MAX_HEALTH);
+        UUID id = victim.getUniqueId();
+        AttributeInstance attr = victim.getAttribute(Attribute.MAX_HEALTH);
         if (attr == null) return;
 
-        Debuff debuff = debuffs.get(id);
-        int addTicks = 200;
-        if (debuff != null) {
-            debuff.remainingTicks += addTicks;
-            debuff.totalDamage += damage;
-        } else {
-            debuff = new Debuff(damage, addTicks);
-            debuffs.put(id, debuff);
+        double currentMax = attr.getBaseValue();
+        double newMax = currentMax - event.getDamage();
+        if (newMax < 0.5) newMax = 0.5;
+
+        if (!originalMaxHealth.containsKey(id)) {
+            originalMaxHealth.put(id, currentMax);
         }
+        attr.setBaseValue(newMax);
 
-        target.addPotionEffect(new PotionEffect(PotionEffectType.NAUSEA, debuff.remainingTicks, 0, true, true, true));
+        int addTicks = 100;
+        int remain = 0;
+        PotionEffect nausea = victim.getPotionEffect(PotionEffectType.NAUSEA);
+        if (nausea != null) {
+            remain = nausea.getDuration();
+        }
+        int newDuration = remain + addTicks;
 
-        double newMax = attr.getBaseValue() - damage;
-        if (newMax < 0.5) newMax = 0.5; // 최대체력은 최소 0.5로 유지
-        if (attr.getBaseValue() > 0.5) attr.setBaseValue(newMax);
+        victim.addPotionEffect(new PotionEffect(
+                PotionEffectType.NAUSEA,
+                newDuration,
+                0,
+                true,
+                true,
+                false
+        ));
 
-        double targetHealth = target.getHealth() - damage;
-        if (targetHealth < 0) targetHealth = 0;
-        target.setHealth(targetHealth);
+        BukkitRunnable oldTask = restoreTasks.get(id);
+        if (oldTask != null) oldTask.cancel();
 
-        new BukkitRunnable() {
+        BukkitRunnable newTask = new BukkitRunnable() {
             @Override
             public void run() {
-                if (!target.isValid()) {
-                    debuffs.remove(id);
-                    cancel();
-                    return;
-                }
-                if (!target.hasPotionEffect(PotionEffectType.NAUSEA)) {
-                    Debuff d = debuffs.remove(id);
-                    if (d != null && attr != null) {
-                        attr.setBaseValue(attr.getDefaultValue());
-                        if (target.getHealth() > attr.getBaseValue()) target.setHealth(attr.getBaseValue());
+                LivingEntity entity = victim;
+                if (!entity.isValid() || entity.isDead() || !entity.hasPotionEffect(PotionEffectType.NAUSEA)) {
+                    Double origin = originalMaxHealth.remove(id);
+                    restoreTasks.remove(id);
+                    AttributeInstance a = entity.getAttribute(Attribute.MAX_HEALTH);
+                    if (origin != null && a != null) {
+                        a.setBaseValue(origin);
+                        if (entity.getHealth() > origin) entity.setHealth(origin);
                     }
                     cancel();
                 }
             }
-        }.runTaskTimer(HyperCore.getInstance(), 0L, 1L);
+        };
+        restoreTasks.put(id, newTask);
+        newTask.runTaskTimer(HyperCore.getInstance(), 0L, 1L);
     }
 
     @EventHandler
     public void onEntitySpawn(EntitySpawnEvent event) {
         if (!(event.getEntity() instanceof Spider spider)) return;
-        spider.getAttribute(Attribute.MAX_HEALTH).setBaseValue(50.0);
+        AttributeInstance attr = spider.getAttribute(Attribute.MAX_HEALTH);
+        if (attr != null) attr.setBaseValue(50.0);
         spider.setHealth(50.0);
         spider.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, Integer.MAX_VALUE, 1, true, false, false));
+    }
+
+    @EventHandler
+    public void onEntityDeath(EntityDeathEvent event) {
+        if (!(event.getEntity() instanceof LivingEntity entity)) return;
+        UUID id = entity.getUniqueId();
+        Double origin = originalMaxHealth.remove(id);
+        BukkitRunnable task = restoreTasks.remove(id);
+        if (task != null) task.cancel();
+        AttributeInstance attr = entity.getAttribute(Attribute.MAX_HEALTH);
+        if (origin != null && attr != null) {
+            attr.setBaseValue(origin);
+        }
     }
 }
